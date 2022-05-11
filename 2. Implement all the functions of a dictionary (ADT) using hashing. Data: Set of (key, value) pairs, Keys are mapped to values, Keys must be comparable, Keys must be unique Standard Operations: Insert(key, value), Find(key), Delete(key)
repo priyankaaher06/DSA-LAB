@@ -1,164 +1,184 @@
-#include<iostream>
-#include<cstdlib>
-#include<string>
-#include<cstdio>
+#include <iostream>
 using namespace std;
-const int TABLE_SIZE = 128;
-/*
-* HashNode Class Declaration
-*/
-class HashNode
+
+const int MAX=100;
+class dictionary;
+class node
 {
-public:
-int key;
-int value;
-HashNode* next;
-HashNode(int key, int value)
-{
-this->key = key;
-this->value = value;
-this->next = NULL;
-}
+    string key,value;
+    node *next;
+    public:
+        friend class dictionary;
+        node()
+        {
+            next=NULL;
+        }
+        node(string key,string value)
+        {
+            this->key=key;
+            this->value=value;
+            next=NULL;
+        }
 };
-class HashMap
+
+class dictionary
 {
-private:
-HashNode** htable;
-public:
-HashMap()
-{
-htable = new HashNode*[TABLE_SIZE];
-for (int i = 0; i < TABLE_SIZE; i++)
-htable[i] = NULL;
-}
-~HashMap()
-{
-for (int i = 0; i < TABLE_SIZE; ++i)
-{
-HashNode* entry = htable[i];
-while (entry != NULL)
-{
-HashNode* prev = entry;
-entry = entry->next;
-delete prev;
-}
-}
-delete[] htable;
-}
-int HashFunc(int key)
-{
-return key % TABLE_SIZE;
-}
-void Insert(int key, int value)
-{
-int hash_val = HashFunc(key);
-HashNode* prev = NULL;
-HashNode* entry = htable[hash_val];
-while (entry != NULL)
-{
-prev = entry;
-entry = entry->next;
-}
-if (entry == NULL)
-{
-entry = new HashNode(key, value);
-if (prev == NULL)
-{
-htable[hash_val] = entry;
-}
-else
-{
-prev->next = entry;
-}
-}
-else
-{
-entry->value = value;
-}
-}
-void Remove(int key)
-{
-int hash_val = HashFunc(key);
-HashNode* entry = htable[hash_val];
-HashNode* prev = NULL;
-if (entry == NULL || entry->key != key)
-{
-cout<<"No Element found at key "<<key<<endl;
-return;
-}
-while (entry->next != NULL)
-{
-prev = entry;
-entry = entry->next;
-}
-if (prev != NULL)
-{
-prev->next = entry->next;
-}
-delete entry;
-cout<<"Element Deleted"<<endl;
-}
-int Search(int key)
-{
-bool flag = false;
-int hash_val = HashFunc(key);
-HashNode* entry = htable[hash_val];
-while (entry != NULL)
-{
-if (entry->key == key)
-{
-cout<<entry->value<<" ";
-flag = true;
-}
-entry = entry->next;
-}
-if (!flag)
-return -1;
-}
+    node *head[MAX];
+    public:
+    dictionary()
+    {
+        for(int i=0;i<MAX;i++)
+        head[i]=NULL;
+    }
+    
+    int hashf(string word);
+    bool insert(string,string);
+    string find(string word);
+    bool deleteWord(string word);
 };
-int main()
+bool dictionary::deleteWord(string word)
 {
-HashMap hash;
-int key, value;
-int choice;
-while (1)
-{
-cout<<"\n Operations on Hash Table"<<endl;
-cout<<"1.Insert element into the table"<<endl;
-cout<<"2.Search element from the key"<<endl;
-cout<<"3.Delete element at a key"<<endl;
-cout<<"4.Exit"<<endl;
-cout<<"Enter your choice: ";
-cin>>choice;
-switch(choice)
-{
-case 1:
-cout<<"Enter key at which element to be inserted: ";
-cin>>key;
-cout<<"Enter element to be inserted: ";
-cin>>value;
-hash.Insert(key, value);
-break;
-case 2:
-cout<<"Enter key of the element to be searched: ";
-cin>>key;
-cout<<"Element at key "<<key<<" : ";
-if (hash.Search(key) == -1)
-{
-cout<<"No element found at key "<<key<<endl;
-continue;
+    int index=hashf(word);
+    node *tmp=head[index];
+    node *par=head[index];
+    if(tmp==NULL) //if no word is present at that index
+    {
+        return false;
+    }
+    if(tmp->key==word && tmp->next==NULL)//only one word is present
+    {
+        tmp->next=NULL;
+        delete tmp;
+        return true;
+    }
+     //tmp=tmp->next;
+    while(tmp->key!=word && tmp->next!=NULL)
+    {
+        par=tmp;
+        tmp=tmp->next;
+    }
+    if(tmp->key==word&&tmp->next!=NULL)
+    {
+        par->next=tmp->next;
+        tmp->next=NULL;
+        delete tmp;
+        return true;
+    }
+    else //delete at end
+    {
+        par->next=NULL;
+        tmp->next=NULL;
+        delete tmp;
+        return true;
+    }
+    return false;
 }
-break;
-case 3:
-cout<<"Enter key of the element to be deleted: ";
-cin>>key;
-hash.Remove(key);
-break;
-case 4:
-exit(1);
-default:
-cout<<"\nEnter correct option\n";
+
+string dictionary::find(string word)
+{
+    int index=hashf(word);
+    //cout<<"\nIndex in find"<<index;
+    node *start=head[index];
+    if(start==NULL)
+    return "-1";
+    while(start!=NULL)
+    {
+        if(start->key==word)
+        return start->value;
+        start=start->next;
+    }
+    return "-1";
+    }
+    
+    bool dictionary::insert(string word,string meaning)
+    {
+        int index=hashf(word);
+        node *p=new node(word,meaning);
+
+    if(head[index]==NULL)
+    {
+        head[index]=p;
+        cout<<"\n"<<word<<"inserted. ";
+        return true;
+    }
+    else
+    {
+        node *start=head[index];
+        while(start->next!=NULL)
+        start=start->next;
+
+        start->next=p;
+        cout<<"\n"<<word<<"inserted. ";
+        return true;
+    }
+    return false;
 }
+
+int dictionary::hashf(string word)
+{
+    int asciiSum=0;
+    for(int i=0;i<word.length();i++)
+    {
+        asciiSum=asciiSum+word[i];
+    }
+    return (asciiSum%100);
 }
-return 0;
+
+int main() 
+{
+    dictionary oxford;
+    int choice;
+    string word,meaning;
+    do
+    {
+        cout<<"\n**** OXFORD DICTIONARY ****\n"
+        <<"1.Insert Word\n"
+        <<"2.Find Word\n"
+        <<"3.Delete Word\n"
+        <<"Enter Your Choice :";
+        cin>>choice;
+        switch(choice)
+        {
+           case 1:
+           cout<<"Enter Word: ";
+           cin>>word;
+           cout<<"Enter Meaning: ";
+           cin>>meaning;
+           if(oxford.insert(word,meaning))
+           cout<<endl<<word<<" inserted into dictionary.";
+           else
+           cout<<"\nFailed to insert.";
+           break;
+           
+           case 2:
+           cout<<"Enter Word to Search: ";
+           cin>>word;
+           meaning=oxford.find(word);
+           if(meaning!="-1")
+                cout<<" Word Is present.\n"<<word<<" = "<<meaning ;
+           else
+           {
+                cout<<"\n Word Not Present";
+           }
+           break;
+           
+           case 3:
+           cout<<"Enter Word to Delete: ";
+           cin>>word;
+           if(oxford.deleteWord(word))
+           cout<<" Word is deleted.";
+           else
+           {
+                cout<<"\nFailed to delete "<<word;
+           }
+           break;
+           default:
+                cout<<"\nWrong Choice.";
+    }
+
+ }
+ 
+ while(choice!=0);
+
+ return 0;
 }
