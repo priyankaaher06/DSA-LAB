@@ -1,86 +1,132 @@
-#include<iostream>
+#include <iostream>
 using namespace std;
 
-class hp
+void
+MaxHeapify (int a[], int i, int n)
 {
-   int heap[20],heap1[20],x,n1,i;
-   public:
-   hp()
-   { heap[0]=0;  heap1[0]=0;
-   } 
-   void getdata();
-   void insert1(int heap[],int);
-   void upadjust1(int heap[],int);
-   void insert2(int heap1[],int);
-   void upadjust2(int heap1[],int);
-   void minmax();
-};
-void hp::getdata()
-{  
-   cout<<"\n enter the no. of students";
-   cin>>n1;
-   cout<<"\n enter the marks";
-   for(i=0;i<n1;i++)
-   {   cin>>x;
-       insert1(heap,x);
-       insert2(heap1,x);
-   }
-}
-void hp::insert1(int heap[20],int x)
-{
-   int n;
-   n=heap[0]; 
-   heap[n+1]=x;
-   heap[0]=n+1;
-  
-   upadjust1(heap,n+1);
-}
-void hp::upadjust1(int heap[20],int i)
-{
-    int temp;
-    while(i>1&&heap[i]>heap[i/2])
+  int j, temp;
+  temp = a[i];
+  j = 2 * i;
+
+  while (j <= n)
     {
-       temp=heap[i];
-       heap[i]=heap[i/2];
-       heap[i/2]=temp;
-       i=i/2;
+      if (j < n && a[j + 1] > a[j])
+	j = j + 1;
+
+      if (temp > a[j])
+	break;
+
+      else if (temp <= a[j])
+	{
+	  a[j / 2] = a[j];
+	  j = 2 * j;
+	}
+    }
+  a[j / 2] = temp;
+  return;
+}
+
+void
+MinHeapify (int a[], int i, int n)
+{
+  int j, temp;
+  temp = a[i];
+  j = 2 * i;
+
+  while (j <= n)
+    {
+      if (j < n && a[j + 1] < a[j])
+	j = j + 1;
+
+      if (temp < a[j])
+	break;
+
+      else if (temp >= a[j])
+	{
+	  a[j / 2] = a[j];
+	  j = 2 * j;
+	}
+    }
+  a[j / 2] = temp;
+  return;
+}
+
+void
+MaxHeapSort (int a[], int n)
+{
+  int i, temp;
+  for (i = n; i >= 2; i--)
+    {
+
+      temp = a[i];
+      a[i] = a[1];
+      a[1] = temp;
+
+      MaxHeapify (a, 1, i - 1);
     }
 }
-void hp::insert2(int heap1[20],int x)
+
+void
+MinHeapSort (int a[], int n)
 {
-   int n;
-   n=heap1[0]; 
-   heap1[n+1]=x;
-   heap1[0]=n+1;
-  
-   upadjust2(heap1,n+1);
-}
-void hp::upadjust2(int heap1[20],int i)
-{
-    int temp1;
-    while(i>1&&heap1[i]<heap1[i/2])
+  int i, temp;
+  for (i = n; i >= 2; i--)
     {
-       temp1=heap1[i];
-       heap1[i]=heap1[i/2];
-       heap1[i/2]=temp1;
-       i=i/2;
+
+      temp = a[i];
+      a[i] = a[1];
+      a[1] = temp;
+
+      MinHeapify (a, 1, i - 1);
     }
 }
-void hp::minmax()
+
+void
+Build_MaxHeap (int a[], int n)
 {
-   cout<<"\n max marks"<<heap[1];
-   cout<<"\n##";
-   for(i=0;i<=n1;i++)
-   {   cout<<"\n"<<heap[i];  }
-   cout<<"\n min marks"<<heap1[1];
-   cout<<"\n##";
-   for(i=0;i<=n1;i++)
-   {   cout<<"\n"<<heap1[i];  }
+  int i;
+  for (i = n / 2; i >= 1; i--)
+    MaxHeapify (a, i, n);
 }
-int main()
-{  
-  hp h;
-  h.getdata();
-  h.minmax();
+
+void
+Build_MinHeap (int a[], int n)
+{
+  int i;
+  for (i = n / 2; i >= 1; i--)
+    MinHeapify (a, i, n);
+}
+
+int
+main ()
+{
+  int n, i;
+  cout << "\nEnter the number of Students : ";
+  cin >> n;
+  n++;
+  int arr[n];
+  for (i = 1; i < n; i++)
+    {
+      cout << "Enter the marks :  " << i << ": ";
+      cin >> arr[i];
+    }
+
+  Build_MaxHeap (arr, n - 1);
+  MaxHeapSort (arr, n - 1);
+
+
+  int max, min;
+  cout << "\nSorted Data : ASCENDING : ";
+
+  for (i = 1; i < n; i++)
+    cout << "->" << arr[i];
+  min = arr[1];
+  Build_MinHeap (arr, n - 1);
+  MinHeapSort (arr, n - 1);
+  cout << "\nSorted Data : DESCENDING: ";
+  max = arr[1];
+  for (i = 1; i < n; i++)
+    cout << "->" << arr[i];
+  cout << "\nMaximum Marks : " << max << "\nMinimum marks : " << min;
   return 0;
 }
