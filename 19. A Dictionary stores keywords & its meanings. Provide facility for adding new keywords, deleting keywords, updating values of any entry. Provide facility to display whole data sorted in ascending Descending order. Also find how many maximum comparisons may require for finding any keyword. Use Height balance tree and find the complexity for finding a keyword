@@ -1,222 +1,192 @@
-#include<conio.h>
-#include<stdio.h>
-#include<iostream.h>
-#include<string.h>
-#include<fstream.h>
-struct word
+#include <iostream>
+#include<string>
+using namespace std;
+class dictionary;
+class node
 {
-char key[15];
-char meaning[20];
-};
-struct node
-{
-word data;
-node*left,*right;
-int ht;
-};
-class AVL
-{
-node *AVLroot;
-node *insert1(node*,word);
-void preorder1(node*);
-void inorder1(node*);
-node*rotateright(node*);
-node*rotateleft(node*);
-node*RR(node*);
-node*LL(node*);
-node*LR(node*);
-node*RL(node*);
-int BF(node*);
-int height(node*T);
+  string word, meaning;
+  node *left, *right;
 public:
-AVL()
-{
-AVLroot=NULL;
-}
-void insert(word x){AVLroot=insert1(AVLroot,x);}
-void preorder(){preorder1(AVLroot);}
-void inorder(){inorder1(AVLroot);}
-void levelwise();
-void search(word x);
-void makenull()
-{
-AVLroot=NULL;
-}
+    friend class dictionary;
+    node ()
+  {
+    left = NULL;
+    right = NULL;
+
+  }
+  node (string word, string meaning)
+  {
+    this->word = word;
+    this->meaning = meaning;
+    left = NULL;
+    right = NULL;
+  }
 };
-void main()
+
+class dictionary
 {
-AVL A;
-int n,i,op;
-word x;
-ifstream f1;
-f1.open("indata.txt",ios::in);
-do
+  node *root;
+public:
+    dictionary ()
+  {
+    root = NULL;
+  }
+  void create ();
+  void inorder_rec (node * rnode);
+  void postorder_rec (node * rnode);
+  void inorder ()
+  {
+    inorder_rec (root);
+  }
+  void postorder ();
+
+  bool insert (string word, string meaning);
+  int search (string key);
+
+};
+
+int
+dictionary::search (string key)
 {
-cout<<"\n1)create:";
-cout<<"\n2)search:";
-cout<<"\n3)print:";
-cout<<"\n4)quit:";
-cout<<"\n Enter your choice:";
-cin>>op;
-switch(op)
-{
-case 1:A.makenull();
-while(!f1.eof())
-{
-f1>>x.key>>x.meaning;
-A.insert(x);
+  node *tmp = root;
+  int count;
+  if (tmp == NULL)
+    {
+      return -1;
+    }
+  if (root->word == key)
+    return 1;
+  while (tmp != NULL)
+    {
+
+      if ((tmp->word) > key)
+	{
+	  tmp = tmp->left;
+	  count++;
+	}
+      else if ((tmp->word) < key)
+	{
+	  tmp = tmp->right;
+	  count++;
+	}
+      else if (tmp->word == key)
+	{
+	  return ++count;
+	}
+    }
+  return -1;
+
 }
-break;
-case 2:cout<<"\n Enter a data:";
-cin>>x.key;
-A.search(x);
-break;
-case 3:cout<<"\npreorder sequence:\n";
-A.preorder();
-cout<<"\nInorder sequence:\n";
-A.inorder();
-break;
-}
-}while(op!=4);
-}
-void AVL::search(word x)
+
+void
+dictionary::postorder ()
 {
-node*T=AVLroot;
-while(T!= NULL)
-{
-if(strcmp(x.key,T->data.key)==0)
-{
-cout<<"Meaning is:"<<T->data.meaning;
-return;
+  postorder_rec (root);
 }
-if(strcmp(x.key,T->data.key)>0)
-T=T->right;
-else
-T=T->left;
-}
-cout<<"\n key not found:";
-}
-node*AVL::insert1(node*T,word x)
+
+void
+dictionary::postorder_rec (node * rnode)
 {
-if(T==NULL)
-{
-T=new node;
-T->data=x;
-T->left=NULL;
-T->right=NULL;
+  if (rnode)
+    {
+      postorder_rec (rnode->right);
+      cout << " " << rnode->word << " : " << rnode->meaning << endl;
+      postorder_rec (rnode->left);
+    }
 }
-else
-if(strcmp(x.key,T->data.key)>0)
+
+void
+dictionary::create ()
 {
-T->right=insert1(T->right,x);
-if(BF(T)==-2)
-if(strcmp(x.key,T->right->data.key)>0)
-T=RR(T);
-else
-T=RL(T);
+  int n;
+  string wordI, meaningI;
+  cout << "\nHow many Word to insert?:\n";
+  cin >> n;
+  for (int i = 0; i < n; i++)
+    {
+      cout << "\nENter Word: ";
+      cin >> wordI;
+      cout << "\nEnter Meaning: ";
+      cin >> meaningI;
+      insert (wordI, meaningI);
+    }
 }
-else
-if(strcmp(x.key,T->data.key)<0)
+
+void
+dictionary::inorder_rec (node * rnode)
 {
-T->left=insert1(T->left,x);
-if(BF(T)==2)
-if(strcmp(x.key,T->left->data.key)<0)
-T=LL(T);
-else
-T=LR(T);
+  if (rnode)
+    {
+      inorder_rec (rnode->left);
+      cout << " " << rnode->word << " : " << rnode->meaning << endl;
+      inorder_rec (rnode->right);
+    }
 }
-T->ht=height(T);
-return(T);
-}
-int AVL::height(node*T)
+
+bool
+dictionary::insert (string word, string meaning)
 {
-int lh,rh;
-if(T==NULL)
-return(0);
-if(T->left==NULL)
-lh=0;
-else
-lh=1+T->left->ht;
-if(T->right==NULL)
-rh=0;
-else
-rh=1+T->right->ht;
-if(lh>rh)
-return(lh);
-return(rh);
+  node *p = new node (word, meaning);
+  if (root == NULL)
+    {
+      root = p;
+      return true;
+    }
+  node *cur = root;
+  node *par = root;
+  while (cur != NULL)		//traversal
+    {
+      if (word > cur->word)
+	{
+	  par = cur;
+	  cur = cur->right;
+	}
+      else if (word < cur->word)
+	{
+	  par = cur;
+	  cur = cur->left;
+	}
+      else
+	{
+	  cout << "\nWord is already in the dictionary.";
+	  return false;
+	}
+    }
+  if (word > par->word)		//insertion of node
+    {
+      par->right = p;
+      return true;
+    }
+  else
+    {
+      par->left = p;
+
+      return true;
+    }
 }
-node * AVL ::rotateright(node *x)
+
+int
+main ()
 {
-node * y;
-y=x->left;
-x->left=y->right;
-y->right=x;
-x->ht=height(x);
-y->ht=height(y);
-return(y);
-}
-node * AVL ::rotateleft(node *x)
-{
-node * y;
-y=x->right;
-x->right=y->left;
-y->left=x;
-x->ht=height(x);
-y->ht=height(y);
-return(y);
-}
-node * AVL ::RR(node *T)
-{
-T=rotateleft(T);
-return(T);
-}
-node * AVL ::LL(node *T)
-{
-T=rotateright(T);
-return(T);
-}
-node * AVL ::LR(node *T)
-{
-T->left=rotateleft(T->left);
-T=rotateright(T);
-return(T);
-}
-node * AVL ::RL(node *T)
-{
-T->left=rotateright(T->left);
-T=rotateleft(T);
-return(T);
-}
-int AVL::BF(node *T)
-{
-int lh,rh;
-if(T==NULL)
-return(0);
-if(T->left==NULL)
-lh=0;
-else
-lh=1+T->left->ht;
-if(T->right==NULL)
-rh=0;
-else
-rh=1+T->right->ht;
-return(lh-rh);
-}
-void AVL::preorder1( node *T)
-{
-if(T!=NULL)
-{
-cout<<"("<<T->data.key<<"-"<<T->data.meaning<<")";
-preorder1(T->left);
-preorder1(T->right);
-}
-}
-void AVL::inorder1(node*T)
-{
-if(T!=NULL)
-{
-inorder1(T->left);
-cout<<"("<<T->data.key<<"---"<<T->data.meaning<<")";
-inorder1(T->right);
-}
+  string word;
+  dictionary months;
+  months.create ();
+  cout << "Ascending order\n";
+  months.inorder ();
+
+  cout << "\nDescending order:\n";
+  months.postorder ();
+
+  cout << "\nEnter word to search: ";
+  cin >> word;
+  int comparisons = months.search (word);
+  if (comparisons == -1)
+    {
+      cout << "\nNot found word";
+    }
+  else
+    {
+      cout << "\n " << word << " found in " << comparisons << " comparisons";
+    }
+  return 0;
 }
